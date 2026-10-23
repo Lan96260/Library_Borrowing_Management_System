@@ -1,6 +1,15 @@
 <script setup>
-// 侧边栏布局：左侧是品牌绿色菜单区，右侧主区域渲染子页面
-// 布局刻意非对称：侧边栏固定宽，内容区左上对齐，不用居中
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+
+const router = useRouter()
+const userStore = useUserStore()
+
+// 退出登录：调用 store 清空状态，跳回登录页
+function handleLogout() {
+  userStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -15,6 +24,18 @@
           <small>Library System</small>
         </div>
       </div>
+
+      <!-- 当前登录用户 -->
+      <div class="user">
+        <span class="user-avatar">👤</span>
+        <div class="user-text">
+          <strong>{{ userStore.username || '未登录' }}</strong>
+          <small>{{ userStore.userInfo.role }}</small>
+        </div>
+      </div>
+
+      <!-- 退出登录 -->
+      <button class="logout" @click="handleLogout">退出登录</button>
 
       <!-- 菜单 -->
       <nav class="menu">
@@ -68,6 +89,55 @@
 .brand-text small {
   font-size: 11px;
   opacity: 0.65;
+}
+
+/* 当前登录用户：头像 + 文字 */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 20px 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid oklch(1 0 0 / 0.15);
+}
+.user-avatar {
+  font-size: 20px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  background: oklch(1 0 0 / 0.1);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.user-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.user-text strong {
+  font-size: 14px;
+}
+.user-text small {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+/* 退出登录：陶土橙描边按钮 */
+.logout {
+  margin: 0 12px 8px;
+  padding: 9px;
+  font-size: 13px;
+  color: var(--primary-ink);
+  background: transparent;
+  border: 1px solid oklch(0.62 0.13 60 / 0.55);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.logout:hover {
+  color: var(--primary-deep);
+  background: var(--accent);
 }
 
 /* 菜单：纵向、左对齐、整条色块高亮 */

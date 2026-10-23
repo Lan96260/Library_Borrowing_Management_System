@@ -4,6 +4,7 @@
 
 // 引入 Vue Router 相关函数
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 // 定义路由表
 const routes = [
@@ -57,12 +58,12 @@ const router = createRouter({
 
 // 全局前置守卫：在每次路由跳转前执行，做登录鉴权
 router.beforeEach((to, from, next) => {
-  // 从 localStorage 读取登录令牌（登录成功时存进去）
-  const token = localStorage.getItem('library_token')
+  // 从 user store 读取登录状态（token 在 store 内与 localStorage 同步）
+  const userStore = useUserStore()
 
   // to.meta.requiresAuth：目标页面是否需要登录
-  // 需要登录但没拿到 token → 未登录，跳转到登录页
-  if (to.matched.some((record) => record.meta.requiresAuth) && !token) {
+  // 需要登录但未登录 → 跳转到登录页
+  if (to.matched.some((record) => record.meta.requiresAuth) && !userStore.isLoggedIn) {
     // 用 next 跳转登录页，并带上想去的地址，登录后可以跳回去
     next({ path: '/login', query: { redirect: to.fullPath } })
   } else {

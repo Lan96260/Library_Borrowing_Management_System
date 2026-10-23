@@ -1,11 +1,18 @@
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
-// 模拟登录：写入 token，跳转到图书列表页
+// 用户名输入框
+const username = ref('')
+
+// 模拟登录：调用 store 写入状态，跳转到图书列表页
 function handleLogin() {
-  localStorage.setItem('library_token', 'demo-token')
+  if (!username.value.trim()) return
+  userStore.login(username.value)
   router.push('/books')
 }
 </script>
@@ -31,8 +38,13 @@ function handleLogin() {
         <p class="form-hint">请登录后开始管理馆藏</p>
 
         <div class="form-row">
-          <label for="username">账号</label>
-          <input id="username" type="text" placeholder="请输入账号" />
+          <label for="username">用户名</label>
+          <input
+            id="username"
+            v-model="username"
+            type="text"
+            placeholder="请输入用户名"
+          />
         </div>
         <div class="form-row">
           <label for="password">密码</label>
