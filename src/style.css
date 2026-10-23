@@ -1,0 +1,57 @@
+/* ============================================================
+   全局设计令牌 + 基础重置（图书借阅管理系统）
+   品牌色种子：oklch(0.650 0.150 145.0) —— 植物绿（hue 145°）
+   ============================================================ */
+
+:root {
+  /* 背景与表面 */
+  --bg: oklch(0.975 0.006 145); /* 页面背景：近白，微微偏绿 */
+  --surface: oklch(1 0 0); /* 卡片/面板：纯白 */
+  --surface-2: oklch(0.955 0.008 145); /* 弱面板 */
+
+  /* 文字 */
+  --ink: oklch(0.30 0.02 150); /* 正文：深绿灰，保证 ≥7:1 对比 */
+  --muted: oklch(0.50 0.015 145); /* 次要文字：≥3.5:1 */
+
+  /* 品牌（与种子 hue 同源，采绿） */
+  --primary: oklch(0.50 0.13 145); /* 主绿：按钮/强调 */
+  --primary-deep: oklch(0.42 0.12 145); /* 悬停/深绿 */
+  --primary-ink: oklch(0.965 0 0); /* 主绿上的文字，用白 */
+  --accent: oklch(0.62 0.13 60); /* 陶土橙：状态/点缀，与绿 hue 分离 */
+
+  /* 线条与阴影 */
+  --border: oklch(0.90 0.01 145);
+  --shadow: 0 1px 2px oklch(0 0 0 / 0.05), 0 4px 12px oklch(0 0 0 / 0.06);
+
+  /* 圆角与字体 */
+  --radius: 12px;
+  --sans: system-ui, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Roboto,
+    sans-serif;
+
+  color-scheme: light;
+}
+
+/* 基础重置：让布局可控、铺满，而不是有旧模板的强制居中宽度 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
