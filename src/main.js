@@ -5,6 +5,13 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 
+// 仅开发环境启用 MSW：mock 接口只能在 dev 下拦截，不污染生产构建
+if (import.meta.env.DEV) {
+  const { setupWorker } = await import('msw/browser')
+  const { handlers } = await import('@/mock/handlers')
+  await setupWorker(...handlers).start()
+}
+
 const app = createApp(App)
 const pinia = createPinia()
 

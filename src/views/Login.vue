@@ -2,18 +2,27 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { login } from '@/api/auth'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-// 用户名输入框
+// 用户名输入框 / 登录中的状态
 const username = ref('')
+const loading = ref(false)
 
-// 模拟登录：调用 store 写入状态，跳转到图书列表页
-function handleLogin() {
+// 登录：调用接口拿 token/userInfo，写入 store 后跳转
+async function handleLogin() {
   if (!username.value.trim()) return
-  userStore.login(username.value)
-  router.push('/books')
+  loading.value = true
+  try {
+    const { token, userInfo } = await login(username.value)
+    userStore.token = token
+    userStore.userInfo = userInfo
+    router.push('/books')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -51,7 +60,9 @@ function handleLogin() {
           <input id="password" type="password" placeholder="请输入密码" />
         </div>
 
-        <button class="login-btn" @click="handleLogin">模拟登录</button>
+        <button class="login-btn" :disabled="loading" @click="handleLogin">
+          {{ loading ? '登录中…' : '模拟登录' }}
+        </button>
       </div>
     </main>
   </div>
