@@ -36,6 +36,24 @@ const routes = [
         component: () => import('@/views/BorrowRecord.vue'),
         meta: { requiresAuth: true, title: '借阅记录' },
       },
+      {
+        path: 'calendar',
+        name: 'BorrowCalendar',
+        component: () => import('@/views/BorrowCalendar.vue'),
+        meta: { requiresAuth: true, title: '借阅日历' },
+      },
+      {
+        path: 'book/new',
+        name: 'BookNew',
+        component: () => import('@/views/BookForm.vue'),
+        meta: { requiresAuth: true, title: '新增图书' },
+      },
+      {
+        path: 'book/edit/:id',
+        name: 'BookEdit',
+        component: () => import('@/views/BookForm.vue'),
+        meta: { requiresAuth: true, title: '编辑图书' },
+      },
     ],
   },
 ]

@@ -1,8 +1,9 @@
 // 图书相关接口
 import request from '@/utils/request'
 
-// 分页获取图书列表：GET /api/books?page=
-export const getBooks = (page) => request.get('/books', { params: { page } })
+// 分页 + 关键字获取图书列表：GET /api/books?page=&pageSize=&keyword=
+export const getBooks = ({ page, pageSize, keyword } = {}) =>
+  request.get('/books', { params: { page, pageSize, keyword } })
 
 // 新增图书：POST /api/books
 export const addBook = (data) => request.post('/books', data)

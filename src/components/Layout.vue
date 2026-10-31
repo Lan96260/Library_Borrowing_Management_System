@@ -14,7 +14,7 @@ function handleLogout() {
 
 <template>
   <div class="layout">
-    <!-- 左侧边栏：深绿品牌面 -->
+    <!-- 左侧边栏：深灰蓝现代品牌面 -->
     <aside class="sidebar">
       <!-- 顶部品牌区 -->
       <div class="brand">
@@ -40,7 +40,9 @@ function handleLogout() {
       <!-- 菜单 -->
       <nav class="menu">
         <RouterLink to="/books" class="menu-item">图书列表</RouterLink>
+        <RouterLink to="/book/new" class="menu-item">新增图书</RouterLink>
         <RouterLink to="/borrow" class="menu-item">借阅记录</RouterLink>
+        <RouterLink to="/calendar" class="menu-item">借阅日历</RouterLink>
       </nav>
     </aside>
 
@@ -58,17 +60,17 @@ function handleLogout() {
   min-height: 100vh;
 }
 
-/* 侧边栏：固定宽度的深绿品牌面 */
+/* 侧边栏：固定宽度的深灰蓝现代品牌面（替代原刺眼深绿） */
 .sidebar {
   width: 224px;
   flex-shrink: 0;
-  background: var(--primary-deep);
-  color: var(--primary-ink);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-ink);
   display: flex;
   flex-direction: column;
 }
 
-/* 品牌区：左上对齐，不居中 */
+/* 品牌区：左上对齐 */
 .brand {
   display: flex;
   align-items: center;
@@ -85,10 +87,11 @@ function handleLogout() {
 }
 .brand-text strong {
   font-size: 16px;
+  color: #f8fafc;
 }
 .brand-text small {
   font-size: 11px;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
 /* 当前登录用户：头像 + 文字 */
@@ -98,7 +101,7 @@ function handleLogout() {
   gap: 10px;
   margin: 4px 20px 14px;
   padding-bottom: 14px;
-  border-bottom: 1px solid oklch(1 0 0 / 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 .user-avatar {
   font-size: 20px;
@@ -106,7 +109,7 @@ function handleLogout() {
   height: 34px;
   display: grid;
   place-items: center;
-  background: oklch(1 0 0 / 0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -117,30 +120,31 @@ function handleLogout() {
 }
 .user-text strong {
   font-size: 14px;
+  color: #f8fafc;
 }
 .user-text small {
   font-size: 11px;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
-/* 退出登录：陶土橙描边按钮 */
+/* 退出登录：柔和描边，悬停填充更淡（减少视觉噪音） */
 .logout {
-  margin: 0 12px 8px;
+  margin: 0 16px 8px;
   padding: 9px;
   font-size: 13px;
-  color: var(--primary-ink);
+  color: var(--sidebar-ink);
   background: transparent;
-  border: 1px solid oklch(0.62 0.13 60 / 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .logout:hover {
-  color: var(--primary-deep);
-  background: var(--accent);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
 }
 
-/* 菜单：纵向、左对齐、整条色块高亮 */
+/* 菜单：纵向、左对齐，选中用白色圆角背景高亮 */
 .menu {
   margin-top: 12px;
   display: flex;
@@ -151,24 +155,25 @@ function handleLogout() {
 .menu-item {
   display: block;
   padding: 11px 14px;
-  color: var(--primary-ink);
+  color: var(--sidebar-ink);
   text-decoration: none;
   font-size: 15px;
   border-radius: 8px;
   transition: background 0.2s ease;
 }
 .menu-item:hover {
-  background: oklch(1 0 0 / 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 .menu-item.router-link-active {
-  background: var(--primary-ink);
-  color: var(--primary-deep);
+  background: #ffffff;      /* 白色圆角高亮 */
+  color: var(--sidebar-bg); /* 深字 */
   font-weight: 600;
 }
 
-/* 主区域：占据剩余宽度，背景浅色，左上对齐 */
+/* 主区域：占据剩余宽度，浅灰背景 + 内边距 */
 .main {
   flex: 1;
   padding: 32px 40px;
+  background: var(--bg);
 }
 </style>

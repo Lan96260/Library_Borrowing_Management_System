@@ -4,34 +4,52 @@
    ============================================================ */
 
 :root {
-  /* 背景与表面 */
-  --bg: oklch(0.975 0.006 145); /* 页面背景：近白，微微偏绿 */
-  --surface: oklch(1 0 0); /* 卡片/面板：纯白 */
-  --surface-2: oklch(0.955 0.008 145); /* 弱面板 */
+  /* 背景与表面：全局浅灰背景，内容用白色卡片承载 */
+  --bg: #f5f7fa;          /* 页面背景：浅灰，提升质感 */
+  --surface: #ffffff;     /* 卡片/面板：纯白 */
+  --surface-2: #fafafa;   /* 弱面板：表头/浅底 */
 
-  /* 文字 */
-  --ink: oklch(0.30 0.02 150); /* 正文：深绿灰，保证 ≥7:1 对比 */
-  --muted: oklch(0.50 0.015 145); /* 次要文字：≥3.5:1 */
+  /* 文字：主信息加深、次要减浅，保证对比度 */
+  --ink: #303133;         /* 正文：主信息（书名/标题）加深 */
+  --muted: #909399;       /* 次要文字（日期/说明）减浅 */
 
-  /* 品牌（与种子 hue 同源，采绿） */
-  --primary: oklch(0.50 0.13 145); /* 主绿：按钮/强调 */
+  /* 品牌（保留植物绿，作为 Element Plus 主色统一组件视觉） */
+  --primary: oklch(0.50 0.13 145);      /* 主绿：按钮/强调 */
   --primary-deep: oklch(0.42 0.12 145); /* 悬停/深绿 */
-  --primary-ink: oklch(0.965 0 0); /* 主绿上的文字，用白 */
-  --accent: oklch(0.62 0.13 60); /* 陶土橙：状态/点缀，与绿 hue 分离 */
+  --primary-ink: #ffffff;               /* 主绿上的文字，用白 */
+  --accent: oklch(0.60 0.13 60);        /* 陶土橙：状态/点缀 */
 
-  /* 线条与阴影 */
-  --border: oklch(0.90 0.01 145);
-  --shadow: 0 1px 2px oklch(0 0 0 / 0.05), 0 4px 12px oklch(0 0 0 / 0.06);
+  /* 侧边栏：现代深灰蓝 */
+  --sidebar-bg: #1e293b;
+  --sidebar-ink: #e2e8f0;
+
+  /* 线条与阴影（卡：仅用轻阴影，不叠加描边） */
+  --border: #e4e7ed;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.05);
 
   /* 圆角与字体 */
-  --radius: 12px;
+  --radius: 8px;          /* 卡片统一 8px */
   --sans: system-ui, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Roboto,
     sans-serif;
+
+  /* Element Plus 主色对齐品牌绿：让按钮/聚焦/校验一致的绿色系 */
+  --el-color-primary: oklch(0.50 0.13 145);
+  --el-color-primary-light-3: oklch(0.60 0.10 145);
+  --el-color-primary-light-5: oklch(0.68 0.08 145);
+  --el-color-primary-light-7: oklch(0.76 0.06 145);
+  --el-color-primary-light-8: oklch(0.82 0.04 145);
+  --el-color-primary-light-9: oklch(0.90 0.02 145);
+  --el-color-primary-dark-2: oklch(0.45 0.12 145);
+
+  /* Element Plus 边框色统一为中性浅灰 */
+  --el-border-color: #e4e7ed;
+  --el-border-color-light: #ebeef5;
+  --el-border-color-lighter: #f2f6fc;
 
   color-scheme: light;
 }
 
-/* 基础重置：让布局可控、铺满，而不是有旧模板的强制居中宽度 */
+/* 基础重置：布局可控，无旧模板的强制居中宽度 */
 * {
   box-sizing: border-box;
 }

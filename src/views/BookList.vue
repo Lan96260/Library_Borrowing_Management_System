@@ -1,357 +1,223 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { getBooks, addBook, updateBook, deleteBook, testError } from '@/api/book'
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
+import { getBooks, addBook, updateBook, deleteBook } from '@/api/book'
+import MyPagination from '@/components/MyPagination.vue'
 
-const router = useRouter()
-const userStore = useUserStore()
-
-// 图书列表 / 加载态
+// 图书数据 / 加载状态
 const books = ref([])
 const loading = ref(false)
 
-// 弹窗状态：是否打开、当前编辑 id（null 表示新增）、表单
-const dialogOpen = ref(false)
-const editingId = ref(null)
-const form = ref({ title: '', author: '', status: '在馆' })
+// 分页与搜索状态
+const page = ref(1)
+const pageSize = ref(5)
+const total = ref(0)
+const keyword = ref('')
 
-// 加载图书：调接口拿分页列表
+// 弹窗状态：是否打开、是否是编辑模式、编辑中的图书 id
+const dialogOpen = ref(false)
+const isEdit = ref(false)
+const editingId = ref(null)
+
+// 表单数据 + 校验规则（书名、作者必填）
+const formRef = ref(null)
+const form = reactive({ title: '', author: '' })
+const rules = {
+  title: [{ required: true, message: '请输入书名', trigger: 'blur' }],
+  author: [{ required: true, message: '请输入作者', trigger: 'blur' }],
+}
+
+// 拉取图书列表（带分页与搜索参数）
 async function loadBooks() {
   loading.value = true
   try {
-    const { list } = await getBooks(1)
+    const { list, total: t } = await getBooks({
+      page: page.value,
+      pageSize: pageSize.value,
+      keyword: keyword.value,
+    })
     books.value = list
+    total.value = t
   } finally {
     loading.value = false
   }
 }
-
 onMounted(loadBooks)
 
-// 打开新增弹窗：清空表单
+// 搜索 / 清空搜索：重置到第一页后重新请求
+function handleSearch() {
+  page.value = 1
+  loadBooks()
+}
+
+// 打开新增弹窗：清空表单并重置校验
 function openAdd() {
-  editingId.value = null
-  form.value = { title: '', author: '', status: '在馆' }
+  isEdit.value = false
+  form.title = ''
+  form.author = ''
+  formRef.value?.clearValidate()
   dialogOpen.value = true
 }
 
-// 打开编辑弹窗：回填当前图书数据
-function openEdit(book) {
-  editingId.value = book.id
-  form.value = { title: book.title, author: book.author, status: book.status }
+// 打开编辑弹窗：记录当前行 id 并回填数据
+function openEdit(row) {
+  isEdit.value = true
+  editingId.value = row.id
+  form.title = row.title
+  form.author = row.author
+  formRef.value?.clearValidate()
   dialogOpen.value = true
 }
 
-// 提交：新增或编辑后刷新列表
+// 提交：先 validate 校验，通过后再新增或编辑，成功后关闭并刷新列表
 async function submit() {
-  if (!form.value.title.trim()) return
-  if (editingId.value !== null) {
-    await updateBook(editingId.value, form.value)
+  await formRef.value.validate()
+  if (isEdit.value) {
+    // 编辑需带 id
+    await updateBook(editingId.value, form)
   } else {
-    await addBook(form.value)
+    await addBook(form)
   }
   dialogOpen.value = false
+  ElMessage.success(isEdit.value ? '保存成功' : '新增成功')
+  if (!isEdit.value) {
+    page.value = 1 // 新增后回到第 1 页，让新书置顶可见
+  }
   loadBooks()
 }
 
-// 删除：确认后调用接口并刷新列表
-async function removeBook(book) {
-  if (!confirm(`确认删除《${book.title}》？`)) return
-  await deleteBook(book.id)
+// 删除：确认后调用接口并刷新
+async function removeBook(row) {
+  if (!(await ElMessageBox.confirm(`确认删除《${row.title}》？`, '提示', { type: 'warning' }).catch(() => null))) return
+  await deleteBook(row.id)
+  ElMessage.success('删除成功')
   loadBooks()
-}
-
-// 测试 500：调用 /api/error，由响应拦截器弹出"服务器错误"提示
-async function triggerError() {
-  await testError()
-}
-
-// 退出登录：清空 store 登录态，跳回登录页
-function handleLogout() {
-  userStore.logout()
-  router.push('/login')
 }
 </script>
 
 <template>
-  <div class="page">
-    <!-- 页头：左对齐，信息型，不居中 -->
+  <div class="page card">
+    <!-- 页头：标题 + 搜索框 + 新增按钮同一行 -->
     <div class="page-head">
-      <div>
-        <h1>图书列表</h1>
-        <p class="page-sub">共 {{ books.length }} 本图书</p>
-      </div>
-      <div class="head-actions">
-        <button class="test-btn" @click="triggerError">测试 500</button>
-        <button class="add-btn" @click="openAdd">新增图书</button>
-        <button class="logout" @click="handleLogout">退出登录</button>
-      </div>
-    </div>
-
-    <!-- 加载中 -->
-    <p v-if="loading" class="empty">加载中…</p>
-
-    <!-- 空数据提示 -->
-    <p v-else-if="books.length === 0" class="empty">暂无图书数据</p>
-
-    <!-- 图书卡片列表：每本一张横排卡 -->
-    <ul v-else class="book-list">
-      <li v-for="book in books" :key="book.id ?? book.title" class="book-item">
-        <div class="book-cover">📖</div>
-        <div class="book-info">
-          <h3 class="book-title">{{ book.title }}</h3>
-          <p class="book-author">作者：{{ book.author }}</p>
-        </div>
-        <span class="book-status" :class="book.status === '在馆' ? 'in' : 'out'">
-          {{ book.status }}
-        </span>
-        <div class="book-actions">
-          <button class="link-btn" @click="openEdit(book)">编辑</button>
-          <button class="link-btn danger" @click="removeBook(book)">删除</button>
-        </div>
-      </li>
-    </ul>
-
-    <!-- 新增 / 编辑弹窗 -->
-    <div v-if="dialogOpen" class="overlay" @click.self="dialogOpen = false">
-      <div class="dialog">
-        <h2>{{ editingId !== null ? '编辑图书' : '新增图书' }}</h2>
-        <label class="field">
-          <span>书名</span>
-          <input v-model="form.title" type="text" placeholder="请输入书名" />
-        </label>
-        <label class="field">
-          <span>作者</span>
-          <input v-model="form.author" type="text" placeholder="请输入作者" />
-        </label>
-        <label class="field">
-          <span>状态</span>
-          <select v-model="form.status">
-            <option value="在馆">在馆</option>
-            <option value="外借">外借</option>
-          </select>
-        </label>
-        <div class="dialog-actions">
-          <button class="dialog-btn" @click="dialogOpen = false">取消</button>
-          <button class="dialog-btn primary" @click="submit">保存</button>
-        </div>
+      <h1>图书列表</h1>
+      <div class="toolbar">
+        <!-- 搜索框：左侧加放大镜图标，宽度适中 -->
+        <el-input
+          v-model="keyword"
+          placeholder="搜索书名或作者"
+          :prefix-icon="Search"
+          clearable
+          class="search"
+          @keyup.enter="handleSearch"
+          @clear="handleSearch"
+        />
+        <el-button @click="handleSearch">搜索</el-button>
+        <!-- 核心操作：醒目主色实心按钮 -->
+        <el-button type="primary" @click="openAdd">新增图书</el-button>
       </div>
     </div>
+
+    <!-- 表格：v-loading 绑定加载态；数据为空时显示 el-empty；row-key 用 id 保证行身份稳定 -->
+    <el-table :data="books" v-loading="loading" empty-text="暂无数据" row-key="id">
+      <el-table-column prop="title" label="书名" min-width="200" />
+      <el-table-column prop="author" label="作者" min-width="160" />
+      <!-- 操作列：编辑 / 删除（删除用淡红，减少视觉噪音） -->
+      <el-table-column label="操作" width="160">
+        <template #default="{ row }">
+          <el-button type="primary" link size="small" @click="openEdit(row)">编辑</el-button>
+          <el-button type="danger" link size="small" @click="removeBook(row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页组件：靠右对齐 + 上边距 -->
+    <MyPagination
+      v-model:page="page"
+      v-model:page-size="pageSize"
+      :total="total"
+      class="pager"
+      @change="loadBooks"
+    />
+
+    <!-- 新增 / 编辑共用弹窗 -->
+    <el-dialog v-model="dialogOpen" :title="isEdit ? '编辑图书' : '新增图书'" width="420px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="48px">
+        <el-form-item label="书名" prop="title">
+          <el-input v-model="form.title" placeholder="请输入书名" />
+        </el-form-item>
+        <el-form-item label="作者" prop="author">
+          <el-input v-model="form.author" placeholder="请输入作者" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogOpen = false">取消</el-button>
+        <el-button type="primary" @click="submit">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <style scoped>
+/* 页面主体：白色卡片包裹（圆角 8px + 轻阴影） */
 .page {
-  max-width: 720px; /* 限制行宽，内容靠左 */
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* 页头：flex，标题区与按钮分居两端 */
+/* 页头：标题与工具栏分居两侧 */
 .page-head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-h1 {
-  font-size: 24px;
-}
-.page-sub {
-  color: var(--muted);
-  margin-top: 4px;
-  font-size: 13px;
-}
-.head-actions {
-  display: flex;
-  gap: 10px;
-}
-.add-btn {
-  padding: 8px 16px;
-  font-size: 14px;
-  color: var(--primary-ink);
-  background: var(--primary);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.add-btn:hover {
-  background: var(--primary-deep);
-}
-/* 测试 500 按钮：描边提示色，弱于主按钮 */
-.test-btn {
-  padding: 8px 16px;
-  font-size: 14px;
-  color: var(--accent);
-  background: transparent;
-  border: 1px solid oklch(0.62 0.13 60 / 0.5);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.test-btn:hover {
-  color: var(--primary-ink);
-  background: var(--accent);
-}
-
-/* 加载中 / 空数据占位 */
-.empty {
-  color: var(--muted);
-  text-align: center;
-  padding: 40px 0;
-  font-size: 14px;
-}
-
-/* 图书卡片：横排一行，封面 + 信息 + 状态 */
-.book-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
   gap: 12px;
+  margin-bottom: 20px;
 }
-.book-item {
+.page-head h1 {
+  font-size: 20px;
+  color: var(--ink); /* 标题加深 */
+}
+
+/* 工具栏：搜索框 + 按钮一行 */
+.toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: box-shadow 0.2s;
+  gap: 10px;
 }
-.book-item:hover {
-  box-shadow: var(--shadow);
-}
-.book-cover {
-  font-size: 26px;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  background: var(--bg);
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-.book-info {
-  flex: 1;
-}
-.book-title {
-  font-size: 16px;
-}
-.book-author {
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 3px;
-}
-.book-status {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  flex-shrink: 0;
-}
-.book-status.in {
-  color: var(--primary-deep);
-  background: oklch(0.5 0.13 145 / 0.12);
-}
-.book-status.out {
-  color: var(--accent);
-  background: oklch(0.62 0.13 60 / 0.14);
-}
-.book-actions {
-  display: flex;
-  gap: 8px;
-}
-.link-btn {
-  padding: 4px 10px;
-  font-size: 13px;
-  color: var(--primary);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.link-btn:hover {
-  border-color: var(--primary);
-}
-.link-btn.danger {
-  color: var(--accent);
-}
-.link-btn.danger:hover {
-  border-color: var(--accent);
+.search {
+  width: 240px;
 }
 
-/* 弹窗遮罩与面板 */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: oklch(0 0 0 / 0.4);
-  display: grid;
-  place-items: center;
-  z-index: 10;
-}
-.dialog {
-  width: 340px;
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 24px;
-  box-shadow: var(--shadow);
-}
-.dialog h2 {
-  font-size: 18px;
-  margin-bottom: 18px;
-}
-.field {
-  display: block;
-  margin-bottom: 14px;
-}
-.field span {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 6px;
-}
-.field input,
-.field select {
-  width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.field input:focus,
-.field select:focus {
-  border-color: var(--primary);
-}
-.dialog-actions {
+/* 分页：右对齐 + 上边距 */
+.pager {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
   margin-top: 20px;
 }
-.dialog-btn {
-  padding: 9px 18px;
-  font-size: 14px;
+
+/* 表格美化：表头浅灰 + 加粗，数据行加高 */
+:deep(.el-table th) {
+  background: #fafafa;
   color: var(--ink);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 600;
 }
-.dialog-btn:hover {
-  border-color: var(--primary);
+:deep(.el-table .el-table__row) {
+  height: 50px;
 }
-.dialog-btn.primary {
-  color: var(--primary-ink);
-  background: var(--primary);
-  border: none;
+
+/* 操作列按钮：缩小字号，删除按钮淡红 */
+:deep(.el-button--primary.is-link) {
+  font-size: 13px;
 }
-.dialog-btn.primary:hover {
-  background: var(--primary-deep);
+:deep(.el-button--danger.is-link) {
+  font-size: 13px;
+  color: #e8695e;              /* 淡红 */
+}
+:deep(.el-button--danger.is-link:hover) {
+  color: #d94a3d;              /* 悬停加深 */
 }
 </style>

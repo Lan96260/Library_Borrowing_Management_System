@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 import './style.css'
 import App from './App.vue'
 import router from './router'
@@ -22,5 +24,6 @@ pinia.use(piniaPluginPersistedstate)
 // use(pinia)：注册 Pinia 状态管理，让所有组件可通过 useStore 访问状态
 app.use(pinia)
 app.use(router)
+app.use(ElementPlus)
 
 app.mount('#app')
